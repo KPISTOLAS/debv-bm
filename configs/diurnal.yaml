@@ -1,0 +1,13 @@
+# WAID diurnal animal inventory used in the paper (9 species).
+domain: diurnal
+modality: rgb
+names:
+  - sheep
+  - cattle
+  - seal
+  - camel
+  - kiang
+  - zebra
+  - crocodile
+  - deer
+  - horse

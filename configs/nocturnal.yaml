@@ -1,0 +1,11 @@
+# FIR Animals nocturnal inventory used in the paper (7 species).
+domain: nocturnal
+modality: thermal
+names:
+  - Bird
+  - Boar
+  - Cat
+  - Deer
+  - Flying-squirrel
+  - Fox
+  - Raccoon

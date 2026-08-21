@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+title: "DEBV-BM reference software"
+message: If you use this software, please cite the accompanying paper.
+authors:
+  - name: DEBV-BM authors
+type: software
+license: MIT
+url: "https://github.com/<ORG>/debv-bm"
+abstract: >
+  Reference implementation of the Distributed Edge-Based Vision Framework
+  for Biodiversity Monitoring (DEBV-BM): Raspberry Pi 5 acquisition and
+  quality-control, Tier-2 YOLOv11–BioCLIP–Grad-CAM++ inference, and
+  closed-set fine-tuning for regional species inventories.
