@@ -39,6 +39,7 @@ def main() -> None:
             }
         )
         return
+    # Do not pass seed: paper runs used Ultralytics library defaults, not a chosen global seed.
     model.train(
         data=str(args.data),
         epochs=args.epochs,

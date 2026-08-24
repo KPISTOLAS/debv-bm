@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import random
+import sys
 from pathlib import Path
 
 import torch
@@ -22,6 +23,9 @@ import yaml
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset, random_split
 from tqdm import tqdm
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from clip_prompts import prompt_for_class
 
 
 def parse_args() -> argparse.Namespace:
@@ -37,7 +41,12 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--model", default="ViT-B-16")
     p.add_argument("--pretrained", default="openai", help="open_clip pretrained tag, or hf-hub:imageomics/bioclip")
     p.add_argument("--out", type=Path, default=Path("runs/bioclip/best.pt"))
-    p.add_argument("--seed", type=int, default=0)
+    p.add_argument(
+        "--seed",
+        type=int,
+        default=0,
+        help="Convenience seed for new fine-tunes (default 0). Paper tables were not pinned to this value.",
+    )
     return p.parse_args()
 
 
@@ -65,18 +74,20 @@ class FolderCrops(Dataset):
 
 
 def load_open_clip(model_name: str, pretrained: str, device: str):
+    """Load the requested checkpoint. Do not fall back to OpenAI CLIP on failure."""
     import open_clip
 
-    try:
+    if pretrained.startswith("hf-hub:"):
+        model, _, preprocess = open_clip.create_model_and_transforms(
+            pretrained, device=device
+        )
+        tokenizer = open_clip.get_tokenizer(pretrained)
+    else:
         model, _, preprocess = open_clip.create_model_and_transforms(
             model_name, pretrained=pretrained, device=device
         )
         tokenizer = open_clip.get_tokenizer(model_name)
-    except Exception:
-        model, _, preprocess = open_clip.create_model_and_transforms(
-            "ViT-B-16", pretrained="openai", device=device
-        )
-        tokenizer = open_clip.get_tokenizer("ViT-B-16")
+    print(f"loaded backbone model_name={model_name!r} pretrained={pretrained!r}")
     for p in model.parameters():
         p.requires_grad = True
     return model, preprocess, tokenizer
@@ -112,7 +123,10 @@ def main() -> None:
 
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=args.epochs, eta_min=args.min_lr)
-    prompts = tokenizer([f"a photo of a {n.replace('_', ' ')}" for n in names]).to(device)
+    from clip_prompts import prompt_for_class
+
+    modality = str(cfg.get("modality", "rgb"))
+    prompts = tokenizer([prompt_for_class(n, modality) for n in names]).to(device)
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     best_acc = -1.0

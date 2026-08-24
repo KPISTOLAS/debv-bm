@@ -2,10 +2,28 @@ cff-version: 1.2.0
 title: "DEBV-BM reference software"
 message: If you use this software, please cite the accompanying paper.
 authors:
-  - name: DEBV-BM authors
+  - family-names: Pistolas
+    given-names: Konstantinos
+    affiliation: Department of Informatics, Democritus University of Thrace
+  - family-names: Amanatidis
+    given-names: Petros
+    affiliation: Department of Informatics, Democritus University of Thrace
+  - family-names: Ioannou
+    given-names: Konstantinos
+    affiliation: Forest Research Institute, Hellenic Agricultural Organization DIMITRA
+  - family-names: Karampatzakis
+    given-names: Dimitris
+    affiliation: Department of Informatics, Democritus University of Thrace
+  - family-names: Sarigiannidis
+    given-names: Panagiotis
+    affiliation: Department of Electrical and Computer Engineering, University of Western Macedonia
+  - family-names: Lagkas
+    given-names: Thomas
+    affiliation: Department of Informatics, Democritus University of Thrace
 type: software
 license: MIT
-url: "https://github.com/<ORG>/debv-bm"
+url: "https://github.com/KPISTOLAS/debv-bm"
+repository-code: "https://github.com/KPISTOLAS/debv-bm"
 abstract: >
   Reference implementation of the Distributed Edge-Based Vision Framework
   for Biodiversity Monitoring (DEBV-BM): Raspberry Pi 5 acquisition and

@@ -1,3 +1,5 @@
+# Minimum versions (not a freeze of the Ubuntu training node).
+# Record `python --version` and `pip freeze` on that node for the rebuttal lock.
 ultralytics>=8.3.0
 torch>=2.2.0
 torchvision>=0.17.0

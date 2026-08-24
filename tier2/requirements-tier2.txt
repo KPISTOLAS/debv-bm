@@ -5,5 +5,4 @@ pillow>=10.0.0
 opencv-python-headless>=4.8.0
 numpy>=1.24.0
 pyyaml>=6.0
-# optional Grad-CAM++
-# pytorch-grad-cam>=1.5.0
+pytorch-grad-cam>=1.5.0

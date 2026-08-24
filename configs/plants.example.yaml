@@ -1,6 +1,6 @@
-# Plant BioCLIP in the paper uses Tree Species Identification v2 (125 species).
-# Do not commit that Roboflow export. After download, dump class names into
-# this file, e.g. from data.yaml `names:` or from train/ folder names.
+# Do not use these placeholder names as a BioCLIP/CLIP test.
+# Fill from Tree Species Identification v2 export `names:` before any plant run.
+# Until that export is on disk, 92.00% is not a run-backed number.
 domain: plants
 modality: rgb
 names:

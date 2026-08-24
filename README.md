@@ -2,9 +2,7 @@
 
 Reference implementation of the **Distributed Edge-Based Vision Framework for Biodiversity Monitoring (DEBV-BM)** described in the accompanying paper. This is research software that matches the three-tier architecture (Raspberry Pi 5 acquisition, a station-side processing node, and optional cloud copy). It is **not** a commercial appliance and does not include UAV autopilot, solar-charge firmware, or a production dashboard.
 
-**Repository:** replace this placeholder after you create the GitHub remote:
-
-`https://github.com/<ORG>/debv-bm`
+**Repository:** [https://github.com/KPISTOLAS/debv-bm](https://github.com/KPISTOLAS/debv-bm)
 
 ## What is and is not claimed
 
@@ -53,11 +51,31 @@ Classifiers are **closed-set**. A new region needs a new inventory and another f
 
 Paper recipe for BioCLIP (implemented in `train/train_bioclip.py`): unfrozen backbone, 50 epochs, 224×224, batch 32, AdamW \(lr=10^{-4}\), weight decay 0.01, cosine annealing.
 
+## Reproducibility (matches the paper Limitations item)
+
+- **Seed.** The reported tables are single-run. Training scripts that produced those numbers did **not** pin a paper-wide seed. Ultralytics `args.yaml` files in local experiment folders show the library default (`0` or `42` depending on Ultralytics version), not a chosen experimental seed. `train/train_bioclip.py --seed 0` is a convenience default for new fine-tunes, not a claim that Tables 1–2 used seed 0.
+- **YOLO weights.** Fine-tune from Ultralytics COCO-pretrained `yolo11l.pt` (`train/train_yolo.py --weights yolo11l.pt`). Not trained from scratch.
+- **Classifier weights.** Loading Stevens et al. BioCLIP is `--pretrained hf-hub:imageomics/bioclip`. The CLI default remains OpenAI CLIP (`--pretrained openai`). Do not describe a run as BioCLIP unless that hub checkpoint actually loaded.
+- **Versions.** Files `train/requirements-train.txt`, `tier2/requirements-tier2.txt`, and `edge_pi5/requirements-edge.txt` are **minimum** pins (`>=`), not a freeze of the Ubuntu training node. Record `python --version` and `pip freeze` from that node if you need bitwise-reproducible numbers.
+- **Table 2 (BioCLIP on GT crops).** Roboflow dumps are not in git. Point `train/evaluate_classifier.py` (alias `train/eval_bioclip.py`) at your WAID / FIR / plant exports:
+
+```bash
+python train/evaluate_classifier.py --checkpoint bioclip --stage gt \
+  --waid path/to/WAID --waid-yaml path/to/yolo_dataset.yaml \
+  --fir path/to/FIR_export --out results/classifier_eval.json
+```
+
+`--stage cascade` needs `--yolo-diurnal` / `--yolo-nocturnal`. Plants 125-way needs `--plants-root` plus export names; `configs/plants.example.yaml` is not that inventory. Zero-shot hub weights are diagnostic; paper Table 2 is a 50-epoch unfrozen fine-tune. Do not paste hardcoded 92/88/91.
+
+## Archive
+
+Tag a release (`v1.0.0`) and archive **that tag** on Zenodo or Software Heritage, then paste the DOI into `CITATION.cff` (`identifiers:`) and the paper Data Availability statement. `main` is mutable; the DOI should point at the tagged snapshot, not a moving branch.
+
 ## Hardware notes
 
 - **Pi 5:** `edge_pi5/` runs in **folder mode** on any PC. On a Pi, point `--camera libcamera` if `picamera2` is installed (see `edge_pi5/README.md`).
 - **Tier 2:** laptop or small GPU server. Weights are not stored in git (see `.gitignore`).
-- **Not in this repo:** DJI/PX4 flight code, MPPT solar controllers, field JPEGs, cloud IAM.
+- **UAV (field, not in this repo):** Holybro X500 V2 quadrotor (four rotors). Flight stack and payload wiring are not shipped here.
 
 ## Citation
 
