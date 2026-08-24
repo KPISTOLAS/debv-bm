@@ -44,3 +44,12 @@ python evaluate_classifier.py --checkpoint bioclip --stage gt \
 `--checkpoint openai-b16` or `openai-b32` for Path 2. Optional `--dump-crops dir` writes YOLO GT crops into `train/<class>/` layout for `train_bioclip.py`. `--stage cascade` only after GT-crop numbers are read; requires `--yolo-diurnal` / `--yolo-nocturnal`. Cascade uses VLM argmax on detector boxes, never YOLO class ids.
 
 Plant 125-way: only with Tree Species Identification v2 on disk (`--plants-root` + export `data.yaml`). Do not use `plants.example.yaml` placeholders. Without that export, **92.00% cannot be a run-backed number** and must not stay in the abstract sourced to hardcoded JSON.
+
+## Faithfulness (AD/IC)
+
+```bash
+python evaluate_faithfulness.py --weights path/to/yolo.pt \
+  --images path/to/images/test --labels path/to/labels/test
+```
+
+Defaults match the paper: 100 correct + 50 wrong, top-20% salient pixels inside the GT box, Grad-CAM++ and Grad-CAM. Checkpoints are not in git (`../WEIGHTS.md`).

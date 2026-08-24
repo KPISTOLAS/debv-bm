@@ -24,6 +24,10 @@ type: software
 license: MIT
 url: "https://github.com/KPISTOLAS/debv-bm"
 repository-code: "https://github.com/KPISTOLAS/debv-bm"
+# identifiers:
+#   - type: doi
+#     value: 10.5281/zenodo.XXXXXXX
+#     description: Archived v1.0.0 source and paper checkpoints (fill after minting)
 abstract: >
   Reference implementation of the Distributed Edge-Based Vision Framework
   for Biodiversity Monitoring (DEBV-BM): Raspberry Pi 5 acquisition and

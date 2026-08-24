@@ -21,7 +21,7 @@ edge_pi5/     Tier 1: capture, colour/brightness, downsample, QC, buffer, upload
 tier2/        Tier 2: YOLO → crop → BioCLIP → Grad-CAM++, spatial–temporal dedup
 train/        Fine-tune YOLO and BioCLIP for a regional species list
 configs/      Closed-set inventories (diurnal 9, nocturnal 7, plant example)
-examples/     Tiny synthetic frames so scripts run without Roboflow dumps
+examples/     Three public WAID test frames so scripts run without the full dump
 ```
 
 ## Quick start (no GPU, no weights)
@@ -67,9 +67,23 @@ python train/evaluate_classifier.py --checkpoint bioclip --stage gt \
 
 `--stage cascade` needs `--yolo-diurnal` / `--yolo-nocturnal`. Plants 125-way needs `--plants-root` plus export names; `configs/plants.example.yaml` is not that inventory. Zero-shot hub weights are diagnostic; paper Table 2 is a 50-epoch unfrozen fine-tune. Do not paste hardcoded 92/88/91.
 
+- **AD/IC (explainability).** Detector Grad-CAM++ vs Grad-CAM on GT boxes, top-20% salient mask, N=150 (100 correct / 50 wrong):
+
+```bash
+python train/evaluate_faithfulness.py --weights path/to/yolo.pt \
+  --images path/to/WAID/images/test --labels path/to/WAID/labels/test \
+  --out results/faithfulness.json
+```
+
+Published 27.91% AD / 0.00% IC / 0.20 IoU need the archived detector checkpoint (`WEIGHTS.md`). `--quick` is a smoke run only.
+
+## Tests / CI
+
+`python -m unittest discover -s tests -v` covers example QC, dedup IoU, AD/IC arithmetic, and ViT Grad-CAM helpers. GitHub Actions runs the edge quick-start plus those tests (no GPU, no paper weights). Requirements stay **minimum** `>=` pins; the paper already notes there is no Ubuntu lockfile. Record `pip freeze` from the training node if you need bitwise numbers.
+
 ## Archive
 
-Tag a release (`v1.0.0`) and archive **that tag** on Zenodo or Software Heritage, then paste the DOI into `CITATION.cff` (`identifiers:`) and the paper Data Availability statement. `main` is mutable; the DOI should point at the tagged snapshot, not a moving branch.
+Tag `v1.0.0` and archive **that tag** (source + the `.pt` checkpoints) on Zenodo. Paste the DOI into `CITATION.cff` and the paper Data Availability statement. `main` is mutable. See [`WEIGHTS.md`](WEIGHTS.md). Until the DOI exists, numeric tables are not turnkey from a git clone.
 
 ## Hardware notes
 
