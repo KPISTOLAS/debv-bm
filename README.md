@@ -83,12 +83,12 @@ Published 27.91% AD / 0.00% IC / 0.20 IoU need the archived detector checkpoint 
 
 ## Archive
 
-Tag `v1.0.0` and archive **that tag** (source + the `.pt` checkpoints) on Zenodo. Paste the DOI into `CITATION.cff` and the paper Data Availability statement. `main` is mutable. See [`WEIGHTS.md`](WEIGHTS.md). Until the DOI exists, numeric tables are not turnkey from a git clone.
+See [`WEIGHTS.md`](WEIGHTS.md) and `weights/paper/` (v1.0.2). Until a Zenodo DOI exists, paste it into `CITATION.cff` after minting. `main` is mutable.
 
 ## Hardware notes
 
 - **Pi 5:** `edge_pi5/` runs in **folder mode** on any PC. On a Pi, point `--camera libcamera` if `picamera2` is installed (see `edge_pi5/README.md`).
-- **Tier 2:** laptop or small GPU server. Weights are not stored in git (see `.gitignore`).
+- **Tier 2:** laptop or small GPU server. Detector checkpoints used by the local eval scripts are in `weights/paper/` (tag v1.0.2). BioCLIP fine-tunes are not in that folder.
 - **UAV (field, not in this repo):** Holybro X500 V2 quadrotor (four rotors). Flight stack and payload wiring are not shipped here.
 
 ## Citation

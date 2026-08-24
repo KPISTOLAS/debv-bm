@@ -5,11 +5,14 @@ __pycache__/
 venv/
 .env
 runs/
-weights/
+weights/*
+!weights/paper/
+!weights/paper/**
 *.pt
 *.pth
 *.onnx
 *.engine
+!weights/paper/*.pt
 datasets/
 data/
 inbox/
