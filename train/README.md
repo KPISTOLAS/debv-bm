@@ -78,7 +78,32 @@ python eval_detector_test.py --data path/to/data.yaml --weights-dir path/to/weig
 # Error-propagation table (0.1 is the reported sensitivity run)
 python error_propagation.py --waid results/waid_test.json --fir results/fir_test.json \
   --marche results/marche_test.json --out results/error_propagation.json --smooth 0.01
+
+# Table 1 bootstrap intervals (validator's own per-image matches; paired model differences)
+python bootstrap_detector_ci.py --data path/to/data.yaml --weights-dir path/to/weights --out results/ci.json
+
+# Table 6: deployed YOLOv11l -> BioCLIP cascade, incl. detector-class vs BioCLIP McNemar test
+python eval_cascade.py --images FIR/test/images --labels FIR/test/labels --detector fir_yolo11l.pt \
+  --config ../configs/nocturnal.yaml --bioclip runs/fir/best.pt --out results/fir_cascade.json
+
+# Faithfulness (AD/IC) on the deployed detector; per-sample rows are written for bootstrapping
+python evaluate_faithfulness.py --weights waid_yolo11l.pt --images WAID/images/test --labels WAID/labels/test
+
+# Throughput (Pipeline Performance) and classifier latency figure
+python benchmark_pipeline.py --images FIR/test/images --detector fir_yolo11l.pt \
+  --config ../configs/nocturnal.yaml --bioclip runs/fir/best.pt --out results/throughput.json
+python benchmark_classifiers.py --out results/latency.json --figure latency.png
+
+# Example detection / BioCLIP / explanation figures
+python make_example_figures.py --day-image WAID/images/test/dataset_2897.jpg --fir-test FIR/test \
+  --waid-detector waid_yolo11l.pt --fir-detector fir_yolo11l.pt \
+  --waid-bioclip runs/waid/best.pt --fir-bioclip runs/fir/best.pt --out figures/
+
+# Local reproducibility retraining of the detectors
+python train_detectors.py --data plants=path/to/forest-trees/data.yaml --models yolov8n yolo11n
 ```
+
+Grad-CAM++ needs `pip install grad-cam` (imported as `pytorch_grad_cam`).
 
 ## Faithfulness (AD/IC)
 

@@ -303,6 +303,7 @@ def main() -> None:
             "correct": summarize(ok),
             "wrong": summarize(bad),
             "welch_ad_correct_vs_wrong": welch_t([r["ad"] for r in ok], [r["ad"] for r in bad]),
+            "samples": [{k: v for k, v in r.items() if k in ("image", "correct", "ad", "ic", "iou")} for r in rows],
         }
         print(method, report["methods"][method]["overall"])
 

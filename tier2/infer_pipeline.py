@@ -158,7 +158,7 @@ def maybe_gradcam(
         from PIL import Image
         import numpy as np
     except ImportError:
-        print("Grad-CAM++ skipped: install pytorch-grad-cam (tier2/requirements-tier2.txt)")
+        print("Grad-CAM++ skipped: pip install grad-cam (tier2/requirements-tier2.txt)")
         return False
 
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "train"))
