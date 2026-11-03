@@ -1,4 +1,10 @@
-"""Spatial–temporal near-duplicate filter for Tier 2 JSON detections."""
+"""Temporal near-duplicate filter for Tier 2 JSON detections.
+
+Two detections are merged when they come from the same edge node (camera), their timestamps
+differ by at most --seconds, and their boxes overlap with IoU >= --iou. Boxes from different
+cameras or UAV passes lie in different image planes, so they are never compared; matching
+across cameras would need georeferenced detections, which this filter does not do.
+"""
 
 from __future__ import annotations
 
@@ -9,7 +15,7 @@ from pathlib import Path
 
 
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="DEBV-BM spatial–temporal deduplication")
+    p = argparse.ArgumentParser(description="DEBV-BM per-camera temporal deduplication")
     p.add_argument("--results-dir", type=Path, required=True)
     p.add_argument("--iou", type=float, default=0.5)
     p.add_argument("--seconds", type=float, default=30.0)
@@ -47,12 +53,14 @@ def flatten(results_dir: Path) -> list[dict]:
             continue
         data = json.loads(path.read_text(encoding="utf-8"))
         ts = data.get("timestamp_utc")
+        node = (data.get("edge_meta") or {}).get("node_id")
         for det in data.get("detections", []):
             items.append(
                 {
                     "file": path.name,
                     "image": data.get("image"),
                     "timestamp_utc": ts,
+                    "node_id": node,
                     "xyxy": det.get("xyxy"),
                     "label": det.get("species") or det.get("detector_class"),
                     "confidence": det.get("confidence"),
@@ -72,6 +80,8 @@ def main() -> None:
         for j in range(i + 1, len(items)):
             if not keep[j] or not items[j].get("xyxy"):
                 continue
+            if a.get("node_id") != items[j].get("node_id"):
+                continue  # different cameras: pixel IoU is meaningless
             tb = parse_ts(items[j])
             if ta and tb and abs((ta - tb).total_seconds()) > args.seconds:
                 continue

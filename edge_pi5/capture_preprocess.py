@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
+import socket
 import sys
 import uuid
 from datetime import datetime, timezone
@@ -35,7 +36,10 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--bright-thr", type=float, default=245.0, help="Reject if mean luma is above this")
     p.add_argument("--lat", type=float, default=None)
     p.add_argument("--lon", type=float, default=None)
-    p.add_argument("--thermal", action="store_true", help="Mark frames as thermal infrared")
+    p.add_argument("--thermal", action="store_true", help="Thermal infrared frames: skip colour/brightness steps")
+    p.add_argument("--colour", action="store_true",
+                   help="CLAHE + brightness correction on RGB frames (off by default: the released models were trained without it)")
+    p.add_argument("--node-id", default=socket.gethostname(), help="Edge node / camera id (Tier 2 dedups per node)")
     p.add_argument("--retry-buffer", action="store_true", help="Copy any leftover buffer files to outbox")
     p.add_argument("--libcamera-frames", type=int, default=1)
     return p.parse_args()
@@ -122,15 +126,22 @@ def upload(src_dir: Path, outbox: Path, stem: str) -> bool:
         return False
 
 
+def preprocess(bgr: np.ndarray, max_side: int, thermal: bool = False, colour: bool = False) -> np.ndarray:
+    """Colour/brightness correction (RGB only; it distorts thermal contrast) and downsampling."""
+    if colour and not thermal:
+        bgr = colour_brightness(bgr)
+    return downsample(bgr, max_side)
+
+
 def process_bgr(bgr: np.ndarray, args: argparse.Namespace, source: str) -> None:
-    bgr = colour_brightness(bgr)
-    bgr = downsample(bgr, args.max_side)
+    bgr = preprocess(bgr, args.max_side, thermal=bool(getattr(args, "thermal", False)), colour=bool(getattr(args, "colour", False)))
     ok, reason, stats = qc_ok(bgr, args.blur_thr, args.dark_thr, args.bright_thr)
     now = datetime.now(timezone.utc).isoformat()
     stem = f"{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}_{uuid.uuid4().hex[:8]}"
     meta = {
         "timestamp_utc": now,
         "source": source,
+        "node_id": getattr(args, "node_id", None),
         "thermal": bool(args.thermal),
         "gps": {"lat": args.lat, "lon": args.lon} if args.lat is not None and args.lon is not None else None,
         "qc": {"passed": ok, "reason": reason, **stats},

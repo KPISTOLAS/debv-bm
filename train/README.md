@@ -28,7 +28,7 @@ python train_bioclip.py --data path/to/crops --config ../configs/nocturnal.yaml 
   --model ViT-B-16 --pretrained hf-hub:imageomics/bioclip
 ```
 
-The R3 revision tables use this Imageomics fine-tune with `--lr 1e-5 --min-lr 1e-7` (see below): at the default `10^{-4}` the Marche plant head did not improve over zero-shot BioCLIP on validation (39.7% vs 38.4%).
+The paper's heads use this Imageomics fine-tune with the defaults `--lr 1e-5 --min-lr 1e-7`: at `1e-4` the Marche plant head did not improve over zero-shot BioCLIP on validation (39.7% vs 38.4%).
 
 ## Classifier eval (replaces hardcoded Table 2 JSON)
 
@@ -43,9 +43,9 @@ python evaluate_classifier.py --checkpoint bioclip --stage gt \
 
 `--checkpoint openai-b16` or `openai-b32` for Path 2. Optional `--dump-crops dir` writes YOLO GT crops into `train/<class>/` layout for `train_bioclip.py`. `--stage cascade` only after GT-crop numbers are read; requires `--yolo-diurnal` / `--yolo-nocturnal`. Cascade uses VLM argmax on detector boxes, never YOLO class ids.
 
-Plant 125-way (Tree Species Identification v2) is no longer used by the paper; R3 replaces it with PureForest and Marche (next section). Do not use `plants.example.yaml` placeholders.
+Plant 125-way (Tree Species Identification v2) is no longer used by the paper; plants use PureForest and Marche (next section). Do not use `plants.example.yaml` placeholders.
 
-## R3 revision pipeline (Tables 1, 2 and error propagation)
+## Paper pipeline (every table and figure)
 
 Datasets, all public:
 
@@ -54,7 +54,7 @@ Datasets, all public:
 | Plant detection | forest trees v10 (Roboflow) | export as obtained, 2528/495/134 |
 | Plant classification | PureForest, `huggingface.co/datasets/IGNF/PureForest` | official forest-level split |
 | Plant classification (UAV) | Marche, Zenodo `10.5281/zenodo.14988733` | by source photo, `../configs/splits/marche_split_manifest.json` |
-| Diurnal | WAID | test 402; 20% of training images held out, `../configs/splits/waid_crops_manifest.json` |
+| Diurnal | nine-label WAID derivative (Roboflow export; not the official WAID split) | test 402; 20% of training images held out, `../configs/splits/waid_crops_manifest.json` |
 | Nocturnal | FIR Animals (cleaned, 7 classes) | export as obtained, `../configs/splits/fir_crops_manifest.json` |
 
 ```bash
@@ -72,8 +72,10 @@ python train_bioclip.py --data data/marche --config ../configs/plants_marche.yam
 python eval_folder_classifier.py --data data/marche --config ../configs/plants_marche.yaml \
   --weights runs/marche/best.pt --out results/marche_test.json
 
-# Detectors (trained on the Ultralytics Platform with AdamW, lr0 0.001, batch 16, patience 20, seed 0)
+# Detectors (trained on the Ultralytics Platform with AdamW, lr0 0.001, batch 16, patience 20, seed 0);
+# deployed: YOLOv11l for plants and diurnal, YOLOv8n for nocturnal (validation mAP@0.5:0.95 stored in each .pt)
 python eval_detector_test.py --data path/to/data.yaml --weights-dir path/to/weights --out results/detect_test.json
+python eval_detector_test.py --data path/to/data.yaml --weights-dir path/to/weights --single-cls --out results/detect_agnostic.json
 
 # Error-propagation table (0.1 is the reported sensitivity run)
 python error_propagation.py --waid results/waid_test.json --fir results/fir_test.json \
@@ -82,21 +84,34 @@ python error_propagation.py --waid results/waid_test.json --fir results/fir_test
 # Table 1 bootstrap intervals (validator's own per-image matches; paired model differences)
 python bootstrap_detector_ci.py --data path/to/data.yaml --weights-dir path/to/weights --out results/ci.json
 
-# Table 6: deployed YOLOv11l -> BioCLIP cascade, incl. detector-class vs BioCLIP McNemar test
-python eval_cascade.py --images FIR/test/images --labels FIR/test/labels --detector fir_yolo11l.pt \
+# Cascade table: deployed detector -> BioCLIP, incl. detector-class vs BioCLIP McNemar test
+python eval_cascade.py --images FIR/test/images --labels FIR/test/labels --detector detector_nocturnal_yolov8n.pt \
   --config ../configs/nocturnal.yaml --bioclip runs/fir/best.pt --out results/fir_cascade.json
+
+# Plant cascade on the Marche test photographs (crown boxes recovered by template matching)
+python eval_plant_cascade.py --archive path/to/Image_Dataset.zip --manifest ../configs/splits/marche_split_manifest.json \
+  --detector detector_plants_yolo11l.pt --config ../configs/plants_marche.yaml --bioclip runs/marche/best.pt \
+  --out results/plant_cascade.json
+python build_marche_detect.py --archive path/to/Image_Dataset.zip --manifest ../configs/splits/marche_split_manifest.json \
+  --out data/marche_detect   # crown-detection set; a YOLOv11l trained on it did not learn (val mAP@0.5 2.2%)
+
+# Edge-preprocessing re-score: --colour = field setting, default = released setting, --thermal for FIR
+python build_edge_preprocessed.py --images FIR/test/images --labels FIR/test/labels \
+  --names Bird Boar Cat Deer Flying-squirrel Fox Raccoon --thermal --out data/edge/nocturnal
+python eval_detector_test.py --data data/edge/nocturnal/data.yaml --weights-dir path/to/weights \
+  --pattern "detector_nocturnal_yolov8n.pt" --out results/edge_nocturnal.json
 
 # Faithfulness (AD/IC) on the deployed detector; per-sample rows are written for bootstrapping
 python evaluate_faithfulness.py --weights waid_yolo11l.pt --images WAID/images/test --labels WAID/labels/test
 
 # Throughput (Pipeline Performance) and classifier latency figure
-python benchmark_pipeline.py --images FIR/test/images --detector fir_yolo11l.pt \
+python benchmark_pipeline.py --images FIR/test/images --detector detector_nocturnal_yolov8n.pt \
   --config ../configs/nocturnal.yaml --bioclip runs/fir/best.pt --out results/throughput.json
 python benchmark_classifiers.py --out results/latency.json --figure latency.png
 
 # Example detection / BioCLIP / explanation figures
 python make_example_figures.py --day-image WAID/images/test/dataset_2897.jpg --fir-test FIR/test \
-  --waid-detector waid_yolo11l.pt --fir-detector fir_yolo11l.pt \
+  --waid-detector detector_diurnal_yolo11l.pt --fir-detector detector_nocturnal_yolov8n.pt \
   --waid-bioclip runs/waid/best.pt --fir-bioclip runs/fir/best.pt --out figures/
 
 # Local reproducibility retraining of the detectors

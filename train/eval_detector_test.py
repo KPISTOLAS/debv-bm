@@ -3,6 +3,8 @@
 Every .pt in --weights-dir is evaluated with Ultralytics' standard mAP protocol
 (low confidence threshold, NMS IoU 0.5); P/R are reported at the max-F1 confidence,
 F1 is their harmonic mean, and inference time is the forward pass per image.
+--split val scores the validation split (detector selection); --single-cls merges all
+classes into one, i.e. class-agnostic mAP as used by the class-agnostic Tier 2 pipeline.
 
 Usage:
   python eval_detector_test.py --data DATA.yaml --weights-dir WEIGHTS --out results.json [--device cpu]
@@ -23,12 +25,15 @@ def main() -> None:
     ap.add_argument("--weights-dir", type=Path, required=True)
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--device", default="cpu")
+    ap.add_argument("--split", default="test", choices=["test", "val"])
+    ap.add_argument("--single-cls", action="store_true", help="Class-agnostic mAP")
+    ap.add_argument("--pattern", default="*.pt", help="Glob for the checkpoints in --weights-dir")
     args = ap.parse_args()
 
     results = {}
-    for pt in sorted(args.weights_dir.glob("*.pt")):
+    for pt in sorted(args.weights_dir.glob(args.pattern)):
         model = YOLO(str(pt))
-        m = model.val(data=str(args.data), split="test", imgsz=640, batch=16, conf=0.001, iou=0.5,
+        m = model.val(data=str(args.data), split=args.split, single_cls=args.single_cls, imgsz=640, batch=16, conf=0.001, iou=0.5,
                       device=args.device, plots=False, verbose=False)
         p, r = float(m.box.mp) * 100, float(m.box.mr) * 100
         results[pt.stem] = {

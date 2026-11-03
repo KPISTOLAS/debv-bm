@@ -23,7 +23,7 @@ N_OCC = 600
 K_SITES = 40
 J_VISITS = 3
 
-# p_det = Table 1 YOLOv11l recall on each test split; focal = rare taxon with true psi = 0.10.
+# p_det = Table 1 recall of the deployed detector (YOLOv11l; nocturnal YOLOv8n); focal = rare taxon with true psi = 0.10.
 DOMAINS = {
     "Diurnal animals": {
         "arg": "waid",
@@ -35,7 +35,7 @@ DOMAINS = {
     },
     "Nocturnal animals": {
         "arg": "fir",
-        "p_det": 0.8234,
+        "p_det": 0.8602,
         "focal": "Fox",
         "psi": [0.35, 0.55, 0.40, 0.30, 0.20, 0.10, 0.40],
         "n_present": 3,

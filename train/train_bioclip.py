@@ -7,7 +7,7 @@ Image folder layout::
       val/<species>/*.jpg   # optional; if missing, a 10% split is taken from train
 
 Hyperparameters (paper): unfrozen backbone, 50 epochs, 224×224, batch 32,
-AdamW lr=1e-4, weight decay 0.01, cosine annealing to 1e-6.
+AdamW lr=1e-5, weight decay 0.01, cosine annealing to 1e-7 (lr 1e-4 did not adapt the plant head).
 """
 
 from __future__ import annotations
@@ -35,9 +35,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--epochs", type=int, default=50)
     p.add_argument("--batch", type=int, default=32)
     p.add_argument("--imgsz", type=int, default=224)
-    p.add_argument("--lr", type=float, default=1e-4)
+    p.add_argument("--lr", type=float, default=1e-5)
     p.add_argument("--weight-decay", type=float, default=0.01)
-    p.add_argument("--min-lr", type=float, default=1e-6)
+    p.add_argument("--min-lr", type=float, default=1e-7)
     p.add_argument("--model", default="ViT-B-16")
     p.add_argument("--pretrained", default="openai", help="open_clip pretrained tag, or hf-hub:imageomics/bioclip")
     p.add_argument("--out", type=Path, default=Path("runs/bioclip/best.pt"))
