@@ -1,0 +1,15 @@
+# Marche UAV tree crowns (Nepi et al. 2025, Zenodo 10.5281/zenodo.14988733), 10 classes.
+# Names are the class folder names produced by AI_Plant/build_marche_classify.py.
+domain: plants
+modality: rgb
+names:
+  - quercus_pubescens
+  - quercus_cerris
+  - quercus_ilex
+  - ostrya_carpinifolia
+  - fraxinus_ornus
+  - castanea_sativa
+  - acer_opalus_obtusatum
+  - prunus_avium
+  - populus_tremula
+  - dead_wood

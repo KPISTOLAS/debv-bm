@@ -41,6 +41,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--model", default="ViT-B-16")
     p.add_argument("--pretrained", default="openai", help="open_clip pretrained tag, or hf-hub:imageomics/bioclip")
     p.add_argument("--out", type=Path, default=Path("runs/bioclip/best.pt"))
+    p.add_argument("--workers", type=int, default=0, help="DataLoader workers (0 = load in the main process)")
     p.add_argument(
         "--seed",
         type=int,
@@ -118,8 +119,8 @@ def main() -> None:
             train_ds, [n_train, n_val], generator=torch.Generator().manual_seed(args.seed)
         )
 
-    train_loader = DataLoader(train_ds, batch_size=args.batch, shuffle=True, num_workers=0)
-    val_loader = DataLoader(val_ds, batch_size=args.batch, shuffle=False, num_workers=0)
+    train_loader = DataLoader(train_ds, batch_size=args.batch, shuffle=True, num_workers=args.workers)
+    val_loader = DataLoader(val_ds, batch_size=args.batch, shuffle=False, num_workers=args.workers)
 
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=args.epochs, eta_min=args.min_lr)

@@ -1,0 +1,18 @@
+# PureForest (Gaydon & Roche 2024), 13 official classes, forest-level split.
+# Names are the class folder names produced by AI_Plant/build_pureforest_classify.py.
+domain: plants
+modality: rgb
+names:
+  - deciduous_oak
+  - evergreen_oak
+  - beech
+  - chestnut
+  - black_locust
+  - maritime_pine
+  - scotch_pine
+  - black_pine
+  - aleppo_pine
+  - fir
+  - spruce
+  - larch
+  - douglas
