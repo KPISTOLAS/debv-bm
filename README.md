@@ -75,7 +75,7 @@ python train/evaluate_faithfulness.py --weights path/to/yolo.pt \
   --out results/faithfulness.json
 ```
 
-Published 27.91% AD / 0.00% IC / 0.20 IoU need the archived detector checkpoint (`WEIGHTS.md`). `--quick` is a smoke run only.
+The paper's R3 AD/IC numbers use `detector_diurnal_yolo11l.pt` from the Zenodo weights record (`WEIGHTS.md`). `--quick` is a smoke run only.
 
 ## Tests / CI
 
@@ -83,12 +83,12 @@ Published 27.91% AD / 0.00% IC / 0.20 IoU need the archived detector checkpoint 
 
 ## Archive
 
-See [`WEIGHTS.md`](WEIGHTS.md) and `weights/paper/` (v1.0.2). Until a Zenodo DOI exists, paste it into `CITATION.cff` after minting. `main` is mutable.
+Software: concept DOI [10.5281/zenodo.22082968](https://doi.org/10.5281/zenodo.22082968) (resolves to the latest release). Trained weights (R3): DOI [10.5281/zenodo.23920498](https://doi.org/10.5281/zenodo.23920498); see [`WEIGHTS.md`](WEIGHTS.md). `main` is mutable.
 
 ## Hardware notes
 
 - **Pi 5:** `edge_pi5/` runs in **folder mode** on any PC. On a Pi, point `--camera libcamera` if `picamera2` is installed (see `edge_pi5/README.md`).
-- **Tier 2:** laptop or small GPU server. Detector checkpoints used by the local eval scripts are in `weights/paper/` (tag v1.0.2). BioCLIP fine-tunes are not in that folder.
+- **Tier 2:** laptop or small GPU server. The R3 detector and BioCLIP weights are in the Zenodo record (`WEIGHTS.md`); `weights/paper/` keeps the R2 checkpoints.
 - **UAV (field, not in this repo):** Holybro X500 V2 quadrotor (four rotors). Flight stack and payload wiring are not shipped here.
 
 ## Citation
