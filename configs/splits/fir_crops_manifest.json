@@ -1,0 +1,39 @@
+{
+  "src": "AI_Animal_Night\\YOLO\\Far infrared rays Animals.v11i.yolov11_cleaned_cleaned_final_no_monkey_badger_palmcivet_nocturnal",
+  "seed": 0,
+  "images": {
+    "train": 1631,
+    "val": 495,
+    "test": 244
+  },
+  "crops": {
+    "train": {
+      "Bird": 179,
+      "Boar": 300,
+      "Cat": 282,
+      "Deer": 367,
+      "Flying-squirrel": 80,
+      "Fox": 293,
+      "Raccoon": 206
+    },
+    "val": {
+      "Bird": 41,
+      "Boar": 85,
+      "Cat": 97,
+      "Deer": 124,
+      "Flying-squirrel": 19,
+      "Fox": 94,
+      "Raccoon": 63
+    },
+    "test": {
+      "Bird": 23,
+      "Boar": 42,
+      "Cat": 47,
+      "Deer": 59,
+      "Flying-squirrel": 11,
+      "Fox": 32,
+      "Raccoon": 38
+    }
+  },
+  "val_images_from_train": []
+}
