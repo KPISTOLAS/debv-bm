@@ -1,0 +1,10 @@
+# Official WAID release (github.com/xiaohuicui/WAID), 6 classes in label-id order.
+domain: diurnal
+modality: rgb
+names:
+  - sheep
+  - cattle
+  - seal
+  - camel
+  - kiang
+  - zebra

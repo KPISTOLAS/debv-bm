@@ -54,8 +54,55 @@ Datasets, all public:
 | Plant detection | forest trees v10 (Roboflow) | export as obtained, 2528/495/134 |
 | Plant classification | PureForest, `huggingface.co/datasets/IGNF/PureForest` | official forest-level split |
 | Plant classification (UAV) | Marche, Zenodo `10.5281/zenodo.14988733` | by source photo, `../configs/splits/marche_split_manifest.json` |
-| Diurnal | nine-label WAID derivative (Roboflow export; not the official WAID split) | test 402; 20% of training images held out, `../configs/splits/waid_crops_manifest.json` |
+| Diurnal (paper, R3) | official WAID release, `github.com/xiaohuicui/WAID`, 6 classes | official 10056/2873/1437; scored on the 1067 test images with no train/valid source duplicate, `../configs/splits/waid_official_manifest.json` |
+| Diurnal (earlier revision) | nine-label WAID derivative (Roboflow export; not the official WAID split) | test 402; 20% of training images held out, `../configs/splits/waid_crops_manifest.json` |
 | Nocturnal | FIR Animals (cleaned, 7 classes) | export as obtained, `../configs/splits/fir_crops_manifest.json` |
+| Diurnal (exploratory, not in the paper) | BAMBI, Zenodo (CC-BY-4.0), `github.com/bambi-eco/Dataset`; RGB boxes from the `owl-transferred` layer | official **flight-level** split (`flight_metadata/splits.json`), `../configs/splits/bambi_rgb_manifest.json` |
+
+### Official WAID (diurnal rows of Tables 1, 2, 6)
+
+```bash
+git clone https://github.com/xiaohuicui/WAID ../../external/WAID
+# data.yaml: train images/train, val images/valid, test images/test (6 classes);
+# data_dedup.yaml: same, but test = the 1067 image paths listed as test_dedup in
+# ../configs/splits/waid_official_manifest.json
+python train_waid_official.py            # YOLOv8n/11n/8l/11l, paper protocol, resumable
+python bootstrap_detector_ci.py --data data_dedup.yaml --weights-dir W --out ci.json
+python time_detectors_fixed.py            # one CPU timing protocol for all Table 1 detectors
+python build_gt_crops.py --src ../../external/WAID/WAID --layout images-labels \
+  --config ../configs/diurnal_waid_official.yaml --out data/waid_official_crops
+python train_bioclip.py --data data/waid_official_crops --config ../configs/diurnal_waid_official.yaml \
+  --pretrained hf-hub:imageomics/bioclip --epochs 10
+python error_propagation_waid_official.py --waid bioclip_test_dedup.json --out ep.json
+```
+
+Scripts read paths relative to the folder that holds `debv-bm/` (override with `DEBV_ROOT`).
+
+### BAMBI (forest wildlife, nadir UAV; exploratory, not used in the paper)
+
+RGB boxes in BAMBI are transferred from thermal and are offset from the animals in many
+frames, so RGB detection scores on it are bounded by label quality (the dataset authors
+report about 71--74% mAP@0.5 for RGB). It was evaluated and not adopted.
+
+```bash
+git clone --depth 1 https://github.com/bambi-eco/Dataset ../../external/bambi-Dataset
+# streams each flight from Zenodo (HTTP range requests, nothing stored but the frames):
+# first 10 usable key frames >= 2 s apart per flight, renders test images for review.
+# Re-running skips finished flights and retries failed ones. ~4.5 h with 6 workers.
+python build_bambi_detect.py --bambi-repo ../../external/bambi-Dataset \
+  --config ../configs/diurnal_bambi.yaml --out ../../data/bambi_rgb --review --workers 6 \
+  --manifest ../configs/splits/bambi_rgb_manifest.json
+# BioCLIP crops from the same images (splits stay flight-level)
+python build_gt_crops.py --src ../../data/bambi_rgb --layout images-labels --config ../configs/diurnal_bambi.yaml --out data/bambi_crops
+```
+
+Classes: wild boar (incl. hybrid pig), red deer, roe deer, the species present in all three
+official splits. Frames holding any other animal, a box the OWL transfer could not move
+(`unchanged`), or mostly animals that OWL did not find in RGB itself (`--min-rgb-detected`,
+default 0.5; fog, dusk, under canopy) are skipped; boxes lying mostly in the black border are dropped. The RGB boxes are
+machine-generated: before reporting test scores, go through `review/test_checklist.csv`
+(fill `verified`, `missed_animals`, `wrong_boxes`) and report on the verified images.
+Result (238 RGB-labelled flights, 204 with usable frames): train 860 images / val 181 / test 249.
 
 ```bash
 # Plant classification sets

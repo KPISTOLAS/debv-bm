@@ -1,0 +1,21 @@
+# BAMBI forest-wildlife inventory (Praschl et al., NeurIPS 2026 Datasets Track; CC-BY-4.0).
+# Replaces the WAID derivative as the diurnal (RGB UAV) benchmark.
+# Only species present in all three official flight-level splits are kept. Fallow deer
+# (train only), alpine ibex and chamois (val only) cannot be evaluated, so frames that
+# contain them are dropped rather than left with unlabelled animals.
+domain: diurnal
+modality: rgb
+names:
+  - Wild-boar
+  - Red-deer
+  - Roe-deer
+# BAMBI MOT `species` string -> index into names. Any other animal species is "ignore":
+# a frame that contains it is skipped (its box would otherwise be an unlabelled positive).
+species_to_class:
+  "Sus scrofa (Wild boar)": 0
+  "Sus scrofa x Sus domesticus (Hybrid Pig)": 0   # visually a boar from the air
+  "Cervus elaphus (Red deer)": 1
+  "Capreolus capreolus (Roe deer)": 2
+# Rows with these species strings carry no animal and are dropped silently.
+no_animal_species:
+  - No-animal
