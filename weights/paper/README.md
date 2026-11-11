@@ -1,10 +1,8 @@
 # R2 checkpoints (v1.0.2)
 
-**The revision R3 paper weights are on Zenodo, not here:** DOI
-[10.5281/zenodo.23920498](https://doi.org/10.5281/zenodo.23920498). That record holds the
-12 detectors of Table 1 (YOLOv8n/l and YOLOv11n/l for plants, WAID and FIR), the 4
-fine-tuned BioCLIP heads of Table 2 (PureForest, Marche, WAID, FIR), a model card with the
-test-split score of every file, and `SHA256SUMS.txt`.
+**The paper weights are on Zenodo, not here:** concept DOI
+[10.5281/zenodo.23920497](https://doi.org/10.5281/zenodo.23920497) (latest version). See
+[`../../WEIGHTS.md`](../../WEIGHTS.md) for the files of each version.
 
 The three files below are the R2 checkpoints, kept for traceability of the R2 numbers only:
 

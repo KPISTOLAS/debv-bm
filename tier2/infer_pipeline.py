@@ -21,7 +21,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--weights", type=Path, required=True, help="YOLOv11 .pt checkpoint")
     p.add_argument("--domain", choices=["plants", "diurnal", "nocturnal"], required=True)
     p.add_argument("--config", type=Path, default=None, help="YAML with names: [...]")
-    p.add_argument("--bioclip-weights", type=Path, default=None, help="Optional OpenCLIP/BioCLIP .pt")
+    p.add_argument("--bioclip-weights", type=Path, default=None, help="Optional OpenCLIP/BioCLIP .pt; omit for the detector-only mode")
     p.add_argument(
         "--clip-pretrained",
         default="openai-b16",
@@ -283,7 +283,13 @@ def main() -> None:
                 "detector_class": int(box.cls[0]) if box.cls is not None else None,
                 "confidence": float(box.conf[0]) if box.conf is not None else None,
             }
-            if bioclip is None or crop.size == 0 or not names:
+            if bioclip is None:
+                # Detector-only operating mode: the species is the detector's own class label
+                # (recommended for the animal streams; see the paper's operating-mode comparison).
+                cls_id = det["detector_class"]
+                det["species"] = yolo.names.get(cls_id) if cls_id is not None else None
+                det["classifier"] = "detector"
+            elif crop.size == 0 or not names:
                 det["species"] = None
                 det["classifier"] = "classifier_unavailable"
             else:

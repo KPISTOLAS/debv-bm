@@ -21,6 +21,8 @@ authors:
     given-names: Thomas
     affiliation: Department of Informatics, Democritus University of Thrace
 type: software
+version: 1.4.0
+date-released: "2026-11-11"
 license: MIT
 url: "https://github.com/KPISTOLAS/debv-bm"
 repository-code: "https://github.com/KPISTOLAS/debv-bm"
@@ -30,8 +32,8 @@ identifiers:
     value: 10.5281/zenodo.22082968
     description: Concept DOI of the archived source (all versions)
   - type: doi
-    value: 10.5281/zenodo.23920498
-    description: Trained detector and BioCLIP weights of the revised paper (R3)
+    value: 10.5281/zenodo.23920497
+    description: Trained detector and BioCLIP weights of the paper (concept DOI, all versions)
 abstract: >
   Reference implementation of the Distributed Edge-Based Vision Framework
   for Biodiversity Monitoring (DEBV-BM): Raspberry Pi 5 acquisition and

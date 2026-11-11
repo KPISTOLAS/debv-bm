@@ -67,7 +67,7 @@ Paper recipe for BioCLIP (`train/train_bioclip.py`): unfrozen backbone, 224×224
 
 ## Archive
 
-Software: concept DOI [10.5281/zenodo.22082968](https://doi.org/10.5281/zenodo.22082968) (resolves to the latest release). Trained weights: DOI [10.5281/zenodo.23920498](https://doi.org/10.5281/zenodo.23920498); see [`WEIGHTS.md`](WEIGHTS.md). `main` is mutable.
+Software: concept DOI [10.5281/zenodo.22082968](https://doi.org/10.5281/zenodo.22082968) (resolves to the latest release); the paper's results were produced with release **v1.4.0**. Trained weights: concept DOI [10.5281/zenodo.23920497](https://doi.org/10.5281/zenodo.23920497); see [`WEIGHTS.md`](WEIGHTS.md). `main` is mutable.
 
 ## Hardware notes
 

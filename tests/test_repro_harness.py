@@ -16,7 +16,14 @@ sys.path.insert(0, str(ROOT / "train"))
 
 import capture_preprocess as edge  # noqa: E402
 from dedup import iou  # noqa: E402
-from evaluate_faithfulness import average_drop, heatmap_box_iou, salient_mask_roi  # noqa: E402
+from evaluate_faithfulness import (  # noqa: E402
+    apply_mask_in_bbox,
+    average_drop,
+    cluster_bootstrap,
+    heatmap_box_iou,
+    random_mask_like,
+    salient_mask_roi,
+)
 from infer_pipeline import reshape_transform_vit, unwrap_state_dict, vit_target_layer  # noqa: E402
 
 
@@ -78,6 +85,61 @@ class TestFaithfulnessMath(unittest.TestCase):
         mask = salient_mask_roi(hm, 0.2)
         self.assertEqual(int(mask.sum()), 20)
         self.assertAlmostEqual(heatmap_box_iou(hm, 0.2), 0.2, places=5)
+
+
+class TestFaithfulnessControls(unittest.TestCase):
+    def test_random_mask_matches_area(self):
+        mask = np.zeros((12, 9), bool)
+        mask.ravel()[:22] = True
+        r = random_mask_like(mask, np.random.default_rng(0))
+        self.assertEqual(int(r.sum()), 22)
+
+    def test_drop_is_channel_order_agnostic(self):
+        img = np.random.default_rng(1).integers(0, 255, (8, 8, 3), dtype=np.uint8)
+        mask = np.zeros((4, 4), bool)
+        mask[0, 0] = True
+        a = apply_mask_in_bbox(img, (2, 2, 6, 6), mask, "drop")
+        b = apply_mask_in_bbox(img[..., ::-1].copy(), (2, 2, 6, 6), mask, "drop")[..., ::-1]
+        np.testing.assert_array_equal(a, b)
+
+    def test_cluster_bootstrap_resamples_images(self):
+        rows = [{"image": "a", "v": 1.0}, {"image": "a", "v": 1.0}, {"image": "b", "v": 0.0}]
+        ci = cluster_bootstrap(rows, lambda r: float(np.mean([x["v"] for x in r])), 500, 0)
+        self.assertEqual(ci[0], 0.0)
+        self.assertEqual(ci[1], 1.0)
+
+
+class TestCamWeights(unittest.TestCase):
+    def test_gradcampp_matches_pytorch_grad_cam(self):
+        try:
+            import torch
+            from pytorch_grad_cam import GradCAMPlusPlus
+        except ImportError:
+            self.skipTest("torch / grad-cam not installed")
+        from yolo_cam import cam_weights
+
+        rng = np.random.default_rng(0)
+        g = rng.normal(size=(1, 6, 5, 5)).astype(np.float32)
+        a = np.abs(rng.normal(size=(1, 6, 5, 5))).astype(np.float32)
+        ref = GradCAMPlusPlus.get_cam_weights(None, None, None, None, a, g)[0]
+        ours = cam_weights(torch.from_numpy(g[0]), torch.from_numpy(a[0]), "gradcampp").numpy()
+        np.testing.assert_allclose(ours, ref, rtol=1e-4, atol=1e-6)
+
+
+class TestGroupedBootstrap(unittest.TestCase):
+    def test_group_patterns(self):
+        try:
+            from eval_folder_classifier import GROUP_PATTERNS, group_ids
+        except ImportError:
+            self.skipTest("classifier deps not installed")
+        pf = [Path("Pinus_halepensis-C8-115_1_128.jpg"), Path("Pinus_halepensis-C8-115_1_148.jpg"),
+              Path("Pinus_halepensis-C8-264_0_3.jpg")]
+        self.assertEqual(list(group_ids(pf, GROUP_PATTERNS["pureforest"])), [0, 0, 1])
+        mc = [Path("mascherargb_immagine53_oggetto_0classe-acer.jpg"), Path("mascherargb_immagine53_oggetto_1classe-oak.jpg"),
+              Path("mascherargb_immagine6_oggetto_0classe-acer.jpg")]
+        ids = group_ids(mc, GROUP_PATTERNS["marche"])
+        self.assertEqual(ids[0], ids[1])
+        self.assertNotEqual(ids[0], ids[2])
 
 
 class TestInferHelpers(unittest.TestCase):

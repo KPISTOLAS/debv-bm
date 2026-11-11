@@ -148,7 +148,8 @@ python build_edge_preprocessed.py --images FIR/test/images --labels FIR/test/lab
 python eval_detector_test.py --data data/edge/nocturnal/data.yaml --weights-dir path/to/weights \
   --pattern "detector_nocturnal_yolov8n.pt" --out results/edge_nocturnal.json
 
-# Faithfulness (AD/IC) on the deployed detector; per-sample rows are written for bootstrapping
+# Faithfulness (AD/IC, deletion, keep-only, random-mask controls) on the deployed detector;
+# image-clustered bootstrap intervals are computed in the script
 python evaluate_faithfulness.py --weights waid_yolo11l.pt --images WAID/images/test --labels WAID/labels/test
 
 # Throughput (Pipeline Performance) and classifier latency figure
@@ -174,4 +175,69 @@ python evaluate_faithfulness.py --weights path/to/yolo.pt \
   --images path/to/images/test --labels path/to/labels/test
 ```
 
-Defaults match the paper: 100 correct + 50 wrong, top-20% salient pixels inside the GT box, Grad-CAM++ and Grad-CAM. Checkpoints are not in git (`../WEIGHTS.md`).
+Defaults: 100 correct + 50 misclassified detections, class-score target backpropagated through the Detect head, standard Grad-CAM++ (Chattopadhay et al., 2018) and Grad-CAM at the last backbone convolution. Reported per method, with image-clustered 95% bootstrap intervals:
+
+- `ad` / `ic`: Average Drop and Increase in Confidence of the explanation map (box region multiplied by the heatmap, context unchanged), as in Chattopadhay et al.;
+- `del_drop`: relative confidence drop after filling the top-20% salient pixels of the box with the crop mean (a deletion measure, not Average Drop);
+- `keep_ic`: fraction of samples whose confidence rises when only the top-20% salient pixels are kept;
+- `*_random`: the same perturbations with random masks of matched pixel count (`--random-repeats`, default 5), and `del_minus_random`, the paired salient-minus-random deletion drop.
+
+Images are passed to `YOLO.predict` as BGR arrays (Ultralytics' NumPy convention). The v1.3.0 settings are only partly reproducible: `--target energy --methods legacy_pp gradcam` restores the class-agnostic activation-energy map and the custom weighting, but not the RGB input bug. Checkpoints are not in git (`../WEIGHTS.md`).
+
+### Grouped bootstrap for classification
+
+`eval_folder_classifier.py --group-by pureforest` resamples the 68 PureForest test forests and `--group-by marche` the 10 Marche test photographs instead of individual patches or crowns. It also reports conventional macro-F1 (`macro_f1`, mean of per-class F1) next to the harmonic mean of macro precision and recall (`f1_of_macro_pr`).
+
+## Revision analyses (review round)
+
+```bash
+# Cascade with image-clustered intervals, image-level sign-flip test, and species-level
+# P/R/F1 over all emitted predictions for the detector-only and detector+BioCLIP modes
+python eval_cascade.py --images FIR/test/images --labels FIR/test/labels --detector detector_nocturnal_yolov8n.pt \
+  --config ../configs/nocturnal.yaml --bioclip runs/fir/best.pt --out results/fir_cascade.json
+# ... after the deployed QC gate (rejected frames yield no predictions; their animals stay in the denominator)
+python eval_cascade.py --images data/edge/nocturnal/images --labels data/edge/nocturnal/labels \
+  --qc-json data/edge/nocturnal/qc.json --detector detector_nocturnal_yolov8n.pt \
+  --config ../configs/nocturnal.yaml --bioclip runs/fir/best.pt --out results/fir_cascade_gated.json
+
+# FIR temporal-leakage audit and recording-level re-split
+python audit_fir_videos.py --root FIR_ROOT --out results/fir_video_audit.json
+python build_fir_recording_split.py --src FIR_ROOT --out data/fir_recsplit
+python build_gt_crops.py --src data/fir_recsplit --layout split-first --config ../configs/nocturnal.yaml --out data/fir_recsplit_crops
+python train_detectors.py --data firrec=data/fir_recsplit/data.yaml --models yolov8n --runs runs_yolo
+python train_bioclip.py --data data/fir_recsplit_crops --config ../configs/nocturnal.yaml \
+  --pretrained hf-hub:imageomics/bioclip --out runs/bioclip_firrec/best.pt
+
+# Standard CLIP baseline with the same protocol, and the paired BioCLIP-vs-CLIP comparison
+python train_bioclip.py --data data/marche --config ../configs/plants_marche.yaml --pretrained openai --out runs/clip_marche/best.pt
+python compare_classifiers.py --data data/marche --config ../configs/plants_marche.yaml \
+  --a runs/marche/best.pt --b runs/clip_marche/best.pt --group-by marche --out results/cmp_marche.json
+```
+
+```bash
+# Content-based near-duplicate audit (perceptual hash; <=4 bits = near-duplicate) and re-score on the clean subset
+python audit_near_duplicates.py --train WAID/images/train WAID/images/valid --test WAID/images/test \
+  --test-list test_dedup.txt --keep-above 4 --keep-list waid_test_nd_clean.txt --out results/nd_waid.json
+# FIR leave-one-recording-out folds (recording names start with '-', so use --test=)
+python build_fir_recording_split.py --src FIR_ROOT --out data/fir_loro/fold1 --test=-FIR-2023-7-_MP4
+python train_detectors.py --data loro1=data/fir_loro/fold1/data.yaml --models yolov8n --runs runs_loro
+# Extra seeds and faithfulness variants
+python train_detectors.py --data firrec=data/fir_recsplit/data.yaml --models yolov8n --seed 1
+python evaluate_faithfulness.py --weights detector_nocturnal_yolov8n.pt --images FIR/test/images --labels FIR/test/labels
+python evaluate_faithfulness.py --weights detector_diurnal_yolo11l.pt --images WAID/test/images --labels WAID/test/labels --top-fraction 0.4
+# Perceptual-hash leakage check of the released FIR split (image level)
+python audit_fir_leakage.py --root FIR_ROOT --out results/fir_leakage.json
+# Error propagation with the confusion matrix and detector recall of the recording-level split (paper appendix, unseen-recordings row)
+python error_propagation_firrec.py --cls results/firrec_bioclip_cls.json --p-det 0.5418 --out results/ep_firrec.json
+```
+
+The exact environment of these runs is pinned in `requirements-lock.txt`.
+
+Released outputs of these steps (no images, file names only):
+
+| File | Contents |
+|---|---|
+| `../configs/splits/fir_recording_split_manifest.json` | recording-level FIR split of the paper (test, validation and training recordings and their images) |
+| `../configs/splits/fir_loro/fold1.json` ... `fold5.json` | leave-one-recording-out folds |
+| `../configs/audits/nd_waid.json`, `nd_waid_val.json`, `nd_trees.json`, `nd_fir_image.json`, `nd_fir_rec.json` | perceptual-hash near-duplicate audits (distance quantiles, counts per threshold, closest pairs) |
+| `../configs/audits/fir_video_audit.json` | FIR frame-index audit: nearest training or validation frame of each test frame, per recording |

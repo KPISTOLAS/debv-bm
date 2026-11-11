@@ -1,0 +1,1183 @@
+{
+ "n_test": 244,
+ "n_test_with_frame_index": 240,
+ "nearest_trainval_gap_median": 1.0,
+ "n_gap_le_1": 213,
+ "n_gap_le_5": 235,
+ "n_gap_le_20": 238,
+ "recordings_in_all_splits": [
+  "-FIR-2023-7-_MP4",
+  "-FIR2023-6-_mp4",
+  "-FIR2023-8-9-_MP4",
+  "-FIR2023-4-declick_MP4",
+  "-FIR2023-2-_MP4",
+  "yt-tC1Y9rwzkrQ",
+  "other (no frame index)",
+  "-FIR2022-12-_MP4",
+  "-FIR-_mp4"
+ ],
+ "per_recording": {
+  "-FIR-2023-7-_MP4": {
+   "images": {
+    "train": 641,
+    "valid": 194,
+    "test": 97
+   },
+   "instances": {
+    "train": {
+     "Fox": 110,
+     "Cat": 132,
+     "Raccoon": 22,
+     "Deer": 110,
+     "Boar": 256,
+     "Bird": 59
+    },
+    "valid": {
+     "Fox": 43,
+     "Cat": 43,
+     "Raccoon": 6,
+     "Deer": 30,
+     "Boar": 67,
+     "Bird": 20
+    },
+    "test": {
+     "Fox": 18,
+     "Cat": 24,
+     "Raccoon": 3,
+     "Deer": 17,
+     "Boar": 35,
+     "Bird": 4
+    }
+   }
+  },
+  "-FIR2023-6-_mp4": {
+   "images": {
+    "train": 277,
+    "valid": 87,
+    "test": 43
+   },
+   "instances": {
+    "train": {
+     "Raccoon": 14,
+     "Deer": 119,
+     "Cat": 83,
+     "Bird": 56,
+     "Flying-squirrel": 7
+    },
+    "valid": {
+     "Deer": 43,
+     "Raccoon": 4,
+     "Cat": 31,
+     "Bird": 10
+    },
+    "test": {
+     "Deer": 23,
+     "Raccoon": 3,
+     "Bird": 8,
+     "Cat": 9,
+     "Flying-squirrel": 1
+    }
+   }
+  },
+  "-FIR2023-8-9-_MP4": {
+   "images": {
+    "train": 251,
+    "valid": 75,
+    "test": 38
+   },
+   "instances": {
+    "train": {
+     "Boar": 23,
+     "Fox": 57,
+     "Cat": 67,
+     "Raccoon": 27,
+     "Flying-squirrel": 1,
+     "Deer": 80
+    },
+    "valid": {
+     "Boar": 9,
+     "Fox": 13,
+     "Cat": 22,
+     "Raccoon": 3,
+     "Deer": 28
+    },
+    "test": {
+     "Boar": 3,
+     "Fox": 7,
+     "Cat": 14,
+     "Raccoon": 1,
+     "Deer": 13
+    }
+   }
+  },
+  "-FIR2023-4-declick_MP4": {
+   "images": {
+    "train": 153,
+    "valid": 44,
+    "test": 30
+   },
+   "instances": {
+    "train": {
+     "Raccoon": 56,
+     "Bird": 20,
+     "Flying-squirrel": 59,
+     "Fox": 3,
+     "Deer": 15
+    },
+    "valid": {
+     "Raccoon": 21,
+     "Flying-squirrel": 17,
+     "Bird": 4,
+     "Deer": 3
+    },
+    "test": {
+     "Bird": 7,
+     "Raccoon": 11,
+     "Flying-squirrel": 9,
+     "Fox": 1,
+     "Deer": 2
+    }
+   }
+  },
+  "-FIR2023-2-_MP4": {
+   "images": {
+    "train": 108,
+    "valid": 28,
+    "test": 17
+   },
+   "instances": {
+    "train": {
+     "Boar": 1,
+     "Raccoon": 39,
+     "Fox": 8,
+     "Deer": 10,
+     "Flying-squirrel": 9,
+     "Bird": 44
+    },
+    "valid": {
+     "Raccoon": 12,
+     "Deer": 3,
+     "Flying-squirrel": 2,
+     "Fox": 5,
+     "Bird": 7
+    },
+    "test": {
+     "Raccoon": 12,
+     "Fox": 2,
+     "Bird": 4
+    }
+   }
+  },
+  "yt-tC1Y9rwzkrQ": {
+   "images": {
+    "train": 49,
+    "valid": 19,
+    "test": 8
+   },
+   "instances": {
+    "train": {
+     "Fox": 21,
+     "Flying-squirrel": 4,
+     "Raccoon": 25
+    },
+    "valid": {
+     "Fox": 8,
+     "Raccoon": 12
+    },
+    "test": {
+     "Fox": 3,
+     "Flying-squirrel": 1,
+     "Raccoon": 4
+    }
+   }
+  },
+  "other (no frame index)": {
+   "images": {
+    "train": 47,
+    "valid": 15,
+    "test": 4
+   },
+   "instances": {
+    "train": {
+     "Fox": 29,
+     "Boar": 16,
+     "Deer": 2
+    },
+    "valid": {
+     "Fox": 7,
+     "Boar": 8
+    },
+    "test": {
+     "Boar": 4
+    }
+   }
+  },
+  "-FIR2022-12-_MP4": {
+   "images": {
+    "train": 27,
+    "valid": 9,
+    "test": 4
+   },
+   "instances": {
+    "train": {
+     "Raccoon": 23,
+     "Fox": 7
+    },
+    "valid": {
+     "Raccoon": 5,
+     "Fox": 4
+    },
+    "test": {
+     "Raccoon": 4
+    }
+   }
+  },
+  "-FIR-_mp4": {
+   "images": {
+    "train": 22,
+    "valid": 9,
+    "test": 3
+   },
+   "instances": {
+    "train": {
+     "Deer": 31,
+     "Fox": 5
+    },
+    "valid": {
+     "Deer": 16,
+     "Fox": 2
+    },
+    "test": {
+     "Deer": 4,
+     "Fox": 1
+    }
+   }
+  },
+  "Wild_Boar": {
+   "images": {
+    "train": 4,
+    "valid": 2,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Boar": 4
+    },
+    "valid": {
+     "Boar": 2
+    },
+    "test": {}
+   }
+  },
+  "00b53cee88cfa4e6cd606d75008fd1a": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "04ecd5fac29270f4fdb4467a95d": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "0fd7750280b7204eaa43bd74c": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "10b0dc2f06b6d312f19a4dfec84336d": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "191c998e037e20ab941dfc75d85e11f": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "1990ade1db6704b4340a1b7fd77e8a": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "1ef073e23d1d378c9869bbc951b8b7e": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "1f2c5249b04efb874ae76122016ba9c": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "287d3f9e78dfb1df01ca10d574cc68d": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "2908793f6d07df431901911c1047cab": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "2c1953745010a0e99f30e7e3b3372e": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "3725189cab0584e45b389c6ba7bf0ae": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "3ec01f92919046d0eacab04a26a7e4f": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "439d7eb397a14ac107b458012d": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "4882f86adea1b1de18b777eed81da6c": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "4e5d65c19e3d2af04ecf18c": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "4fb9de78c4a6ffaf31232893251bcf": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "517aa9edd92dbd39f0cc995110d42d": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "57de93bacb85fb255e6b86e688a4cf7010d029c8-32-2-9": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Boar": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "5d61f1820c88c23155598f1c8b693b": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "5e6c079aa695690976894140a8cd3f": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "5ef37db2fab78d974c7bbef426c4f": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "657336159c713ec14ffff9a89ec86a": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "6886e4dfe7bb59930192f1b0bbec": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "6a125502846521213571bfd18e": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "6b17fbfbeb988d62f78c26db93ac": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "719a379c5808de40b879d1b31835eba": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "785815f7f793ae5db91ffcfbb": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "865d767e78367cd9d15564df3ebd": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "94a9a8507d6290a43a5f111b40b": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "976dfddc5e818aa728feec1d55ff28a": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "a02f0660da44a5e820a93c48d48cceb": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "a74c5d3e889c086e92ce9ef82755de": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "ae19a8acd09cf7464f67c9217ded39b": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "b54dc5e119c4412f0f6babf73f66f": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "b6a77cc72cb4d71811214aa": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "b6d8a1792edbfbef92ba": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "bec4a8d3df59d36012ac2ac10f95b": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "c069041b4eea0193a9640ef7663d": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "c209b211e9170a1c977770393d37c": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 2
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "cac724e2aa7e008d3f36b150d4ce7b": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "d1433daed2b78c67d57055f9e82dc": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "d15c49767321d5686184c30bbb07f8b": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "d5aafe4c4c67661c353b68c22ba": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "da1cb69fabc4646d4b811691d552be": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "e22a47b26f9abbf36415f77d4546e": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 2
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "e7aefd119db7277c27108df841af0de": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "f25a03a655f28f56bd57430f740f73c": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "f4473a08f0ddc3224f7c19aad166f0e": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "f454f0da8ff678c22bf13484d2382d": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "f9d336fb871ee0a9e1a5b5e78c3494a": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "fa3ef9cb009617f1df0bf6eafa3177b": {
+   "images": {
+    "train": 1,
+    "valid": 0,
+    "test": 0
+   },
+   "instances": {
+    "train": {
+     "Fox": 1
+    },
+    "valid": {},
+    "test": {}
+   }
+  },
+  "06df9ca55628fef232719214bc2e": {
+   "images": {
+    "train": 0,
+    "valid": 1,
+    "test": 0
+   },
+   "instances": {
+    "train": {},
+    "valid": {
+     "Fox": 1
+    },
+    "test": {}
+   }
+  },
+  "2d9e4f175dc60883c7f8c9cf7da2d": {
+   "images": {
+    "train": 0,
+    "valid": 1,
+    "test": 0
+   },
+   "instances": {
+    "train": {},
+    "valid": {
+     "Fox": 2
+    },
+    "test": {}
+   }
+  },
+  "302a699999dafdb5ce8f": {
+   "images": {
+    "train": 0,
+    "valid": 1,
+    "test": 0
+   },
+   "instances": {
+    "train": {},
+    "valid": {
+     "Fox": 1
+    },
+    "test": {}
+   }
+  },
+  "77f461bde195bc01579892f08f544e": {
+   "images": {
+    "train": 0,
+    "valid": 1,
+    "test": 0
+   },
+   "instances": {
+    "train": {},
+    "valid": {
+     "Fox": 1
+    },
+    "test": {}
+   }
+  },
+  "788fcfcb02b37cbfe96fb4f6162ea": {
+   "images": {
+    "train": 0,
+    "valid": 1,
+    "test": 0
+   },
+   "instances": {
+    "train": {},
+    "valid": {
+     "Fox": 1
+    },
+    "test": {}
+   }
+  },
+  "91f65e007ee2d2bcb17abd7da5a3fa": {
+   "images": {
+    "train": 0,
+    "valid": 1,
+    "test": 0
+   },
+   "instances": {
+    "train": {},
+    "valid": {
+     "Fox": 1
+    },
+    "test": {}
+   }
+  },
+  "96f4e4dbcba96ada355199ea4ec1afa": {
+   "images": {
+    "train": 0,
+    "valid": 1,
+    "test": 0
+   },
+   "instances": {
+    "train": {},
+    "valid": {
+     "Fox": 1
+    },
+    "test": {}
+   }
+  },
+  "9db7b3f2420eeb72503cfa68e1d598d": {
+   "images": {
+    "train": 0,
+    "valid": 1,
+    "test": 0
+   },
+   "instances": {
+    "train": {},
+    "valid": {
+     "Fox": 1
+    },
+    "test": {}
+   }
+  },
+  "a2319a7a1d642deea5f756d159a": {
+   "images": {
+    "train": 0,
+    "valid": 1,
+    "test": 0
+   },
+   "instances": {
+    "train": {},
+    "valid": {
+     "Fox": 1
+    },
+    "test": {}
+   }
+  },
+  "adfbb0fac6a004a0be1502bee0d82ad": {
+   "images": {
+    "train": 0,
+    "valid": 1,
+    "test": 0
+   },
+   "instances": {
+    "train": {},
+    "valid": {
+     "Fox": 1
+    },
+    "test": {}
+   }
+  },
+  "d3c9b85fa4ff9663d354451dbea": {
+   "images": {
+    "train": 0,
+    "valid": 1,
+    "test": 0
+   },
+   "instances": {
+    "train": {},
+    "valid": {
+     "Fox": 1
+    },
+    "test": {}
+   }
+  },
+  "e0094349": {
+   "images": {
+    "train": 0,
+    "valid": 1,
+    "test": 0
+   },
+   "instances": {
+    "train": {},
+    "valid": {
+     "Deer": 1
+    },
+    "test": {}
+   }
+  },
+  "pexels-pixabay": {
+   "images": {
+    "train": 0,
+    "valid": 1,
+    "test": 0
+   },
+   "instances": {
+    "train": {},
+    "valid": {
+     "Cat": 1
+    },
+    "test": {}
+   }
+  }
+ }
+}

@@ -25,6 +25,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--models", nargs="+", default=["yolov8n", "yolo11n"])
     p.add_argument("--runs", type=Path, default=Path("runs_yolo"))
     p.add_argument("--device", default="0")
+    p.add_argument("--seed", type=int, default=0, help="Training seed (0 = paper runs; others get a _s<seed> suffix)")
     return p.parse_args()
 
 
@@ -35,16 +36,17 @@ def main() -> None:
     for domain, data in domains.items():
         for name in args.models:
             t0 = time.time()
-            print(f"{time.strftime('%H:%M')} start {domain} {name}", flush=True)
+            tag = name if args.seed == 0 else f"{name}_s{args.seed}"
+            print(f"{time.strftime('%H:%M')} start {domain} {tag}", flush=True)
             YOLO(f"{name}.pt").train(
                 data=str(Path(data).resolve()), epochs=100, batch=16, imgsz=640, optimizer="AdamW", lr0=0.001,
-                patience=20, seed=0, deterministic=True, device=args.device, workers=8, plots=False,
-                project=str(runs), name=f"{domain}_{name}", exist_ok=True, verbose=False,
+                patience=20, seed=args.seed, deterministic=True, device=args.device, workers=8, plots=False,
+                project=str(runs), name=f"{domain}_{tag}", exist_ok=True, verbose=False,
             )
-            best = runs / f"{domain}_{name}" / "weights" / "best.pt"
+            best = runs / f"{domain}_{tag}" / "weights" / "best.pt"
             if not best.exists():
-                raise SystemExit(f"no best.pt for {domain} {name}")
-            dest = runs / f"weights_{domain}" / f"{name}.pt"
+                raise SystemExit(f"no best.pt for {domain} {tag}")
+            dest = runs / f"weights_{domain}" / f"{tag}.pt"
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(best, dest)
             print(f"{time.strftime('%H:%M')} done {domain} {name} in {(time.time() - t0) / 60:.1f} min", flush=True)

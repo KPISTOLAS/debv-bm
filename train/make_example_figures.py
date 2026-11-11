@@ -116,7 +116,9 @@ def explanation_panel(img_path: Path, detector: Path, cfg: Path, bioclip: Path, 
     img = cv2.imread(str(img_path))
     yolo = YOLO(str(detector))
     det = yolo.predict(img, conf=0.25, iou=0.5, imgsz=640, verbose=False)[0]
-    x1, y1, x2, y2 = det.boxes.xyxy[int(det.boxes.conf.argmax())].cpu().numpy().astype(int)
+    best = int(det.boxes.conf.argmax())
+    x1, y1, x2, y2 = det.boxes.xyxy[best].cpu().numpy().astype(int)
+    det_cls = int(det.boxes.cls[best].item())
     crop = Image.fromarray(cv2.cvtColor(img[y1:y2, x1:x2], cv2.COLOR_BGR2RGB))
 
     names, clip, preprocess, text = load_head(cfg, bioclip)
@@ -130,7 +132,8 @@ def explanation_panel(img_path: Path, detector: Path, cfg: Path, bioclip: Path, 
     base = np.asarray(crop.resize((side, side), Image.BICUBIC)).astype(np.float32) / 255.0
     overlay = show_cam_on_image(base, heat, use_rgb=True)
 
-    det_heat = YoloCam(yolo, method="plusplus").heatmap_roi(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), (x1, y1, x2, y2))
+    det_heat = YoloCam(yolo, method="gradcampp", target="class").heatmap_roi(
+        cv2.cvtColor(img, cv2.COLOR_BGR2RGB), (x1, y1, x2, y2), target_class=det_cls)
     det_overlay = show_cam_on_image(base, cv2.resize(det_heat, (side, side), interpolation=cv2.INTER_CUBIC), use_rgb=True)
 
     row = np.concatenate([np.uint8(base * 255), det_overlay, overlay], axis=1)

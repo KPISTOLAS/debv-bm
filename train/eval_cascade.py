@@ -7,9 +7,24 @@ instance is classified twice by the BioCLIP head: on its ground-truth crop (Refe
 on the detector crop (Cascade). Crops are tight boxes passed through the same JPEG round trip
 as build_gt_crops.py, so Reference over all ground-truth boxes reproduces Table 2.
 
+Additions (review revision):
+  * --qc-json: the edge QC log of build_edge_preprocessed.py; images it rejected produce no
+    predictions, but their ground-truth animals stay in every recall denominator.
+  * Intervals and the detector-vs-BioCLIP comparison are clustered by image: percentile
+    bootstrap over images, and an image-level sign-flip randomization test of the paired
+    difference (instances within one image are not independent). The instance-level
+    Wilson intervals and exact McNemar test are kept for comparison.
+  * Final species-level precision, recall and F1 over all emitted predictions, for two
+    operating modes: detector-only (the detector's class) and detector+BioCLIP (BioCLIP
+    label on every detection crop). A prediction is a true positive only if it is matched
+    (IoU >= --match-iou, one-to-one) to a ground-truth animal of the same species; unmatched
+    detections, detections on empty images, and matched detections with the wrong species
+    are false positives. Reported per class, macro-averaged (mean of per-class F1) and
+    micro-averaged, with image-bootstrap intervals.
+
 Usage:
   python eval_cascade.py --images TEST/images --labels TEST/labels --detector yolo11l.pt \
-      --config ../configs/diurnal.yaml --bioclip best.pt --out cascade.json
+      --config ../configs/diurnal.yaml --bioclip best.pt --out cascade.json [--qc-json qc.json]
 """
 
 from __future__ import annotations
@@ -45,6 +60,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--conf", type=float, default=0.25)
     p.add_argument("--nms-iou", type=float, default=0.5)
     p.add_argument("--match-iou", type=float, default=0.5)
+    p.add_argument("--qc-json", type=Path, default=None, help="qc.json from build_edge_preprocessed.py")
+    p.add_argument("--bootstrap", type=int, default=2000)
+    p.add_argument("--seed", type=int, default=0)
     p.add_argument("--out", type=Path, required=True)
     return p.parse_args()
 
@@ -88,10 +106,43 @@ def wilson(k: int, n: int, z: float = 1.96) -> list[float]:
     return [round(100 * (c - h), 2), round(100 * (c + h), 2)]
 
 
+def species_prf(rows: list[dict], mode: str, k_cls: int) -> dict:
+    """Species-level P/R/F1 over all emitted predictions of `mode` ('detector' or 'bioclip')."""
+    tp, fp, fn = np.zeros(k_cls), np.zeros(k_cls), np.zeros(k_cls)
+    for r in rows:
+        for c in r["gt"]:
+            fn[c] += 1
+        for d in r["dets"]:
+            lab = d["det_cls"] if mode == "detector" else d["clip_cls"]
+            if lab < 0:
+                continue
+            if d["gt"] >= 0 and r["gt"][d["gt"]] == lab:
+                tp[lab] += 1
+                fn[lab] -= 1
+            else:
+                fp[lab] += 1
+    p = np.divide(tp, tp + fp, out=np.zeros(k_cls), where=(tp + fp) > 0)
+    rc = np.divide(tp, tp + fn, out=np.zeros(k_cls), where=(tp + fn) > 0)
+    f = np.divide(2 * p * rc, p + rc, out=np.zeros(k_cls), where=(p + rc) > 0)
+    present = (tp + fn) > 0
+    mp = 100 * tp.sum() / max(tp.sum() + fp.sum(), 1)
+    mr = 100 * tp.sum() / max(tp.sum() + fn.sum(), 1)
+    return {
+        "macro_precision": 100 * float(p[present].mean()),
+        "macro_recall": 100 * float(rc[present].mean()),
+        "macro_f1": 100 * float(f[present].mean()),
+        "micro_precision": float(mp), "micro_recall": float(mr),
+        "micro_f1": float(2 * mp * mr / (mp + mr)) if mp + mr else 0.0,
+        "tp": int(tp.sum()), "fp": int(fp.sum()), "fn": int(fn.sum()),
+        "_p": p, "_r": rc, "_f": f, "_support": tp + fn,
+    }
+
+
 def main() -> None:
     args = parse_args()
     cfg = yaml.safe_load(args.config.read_text(encoding="utf-8"))
     names = list(cfg["names"])
+    k_cls = len(names)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     clip, preprocess, tokenizer = load_open_clip("ViT-B-16", args.pretrained, device)
     clip.load_state_dict(torch.load(args.bioclip, map_location=device)["state_dict"])
@@ -107,51 +158,138 @@ def main() -> None:
                 preds.append((F.normalize(clip.encode_image(x), dim=-1) @ text.T).argmax(-1).cpu().numpy())
         return np.concatenate(preds) if preds else np.zeros(0, dtype=int)
 
+    rejected: set[str] = set()
+    if args.qc_json:
+        qc = json.loads(args.qc_json.read_text(encoding="utf-8"))
+        rejected = {k for k, v in qc["images"].items() if not v["passed"]}
+
     detector = YOLO(str(args.detector))
-    n_gt = n_det = 0
-    gt_y, gt_crops, m_y, m_gt_crops, m_det_crops, m_det_cls = [], [], [], [], [], []
+    n_det = 0
+    images: list[dict] = []
+    gt_y, gt_crops, det_crops, m_gt_crops = [], [], [], []
     for img_path in list_images(args.images):
         img = cv2.imread(str(img_path))
         if img is None:
             continue
         h, w = img.shape[:2]
         gts = parse_yolo_label(args.labels / f"{img_path.stem}.txt", w, h, len(names))
-        n_gt += len(gts)
+        rec = {"name": img_path.stem, "gt": [g["cls"] for g in gts], "gated": img_path.stem in rejected,
+               "dets": [], "matches": []}
         for g in gts:
             gt_y.append(g["cls"])
             gt_crops.append(crop_rgb(img, g["bbox"]))
-        res = detector.predict(img, conf=args.conf, iou=args.nms_iou, imgsz=640, verbose=False)[0]
-        det = res.boxes.xyxy.cpu().numpy()
-        det_cls = res.boxes.cls.cpu().numpy().astype(int)
-        n_det += len(det)
-        if not gts or not len(det):
-            continue
-        gt_boxes = np.array([g["bbox"] for g in gts], dtype=float)
-        for gi, di in greedy_match(iou_matrix(gt_boxes, det), args.match_iou):
-            x1, y1, x2, y2 = det[di]
-            x1, y1 = max(0, int(x1)), max(0, int(y1))
-            x2, y2 = min(w - 1, int(x2)), min(h - 1, int(y2))
-            if x2 <= x1 or y2 <= y1:
-                continue
-            m_y.append(gts[gi]["cls"])
-            m_gt_crops.append(crop_rgb(img, gts[gi]["bbox"]))
-            m_det_crops.append(crop_rgb(img, (x1, y1, x2, y2)))
-            m_det_cls.append(det_cls[di])
+        if not rec["gated"]:
+            res = detector.predict(img, conf=args.conf, iou=args.nms_iou, imgsz=640, verbose=False)[0]
+            det = res.boxes.xyxy.cpu().numpy()
+            det_cls = res.boxes.cls.cpu().numpy().astype(int)
+            n_det += len(det)
+            for di in range(len(det)):
+                x1, y1, x2, y2 = det[di]
+                x1, y1 = max(0, int(x1)), max(0, int(y1))
+                x2, y2 = min(w - 1, int(x2)), min(h - 1, int(y2))
+                ok = x2 > x1 and y2 > y1
+                rec["dets"].append({"det_cls": int(det_cls[di]), "crop_idx": len(det_crops) if ok else -1, "gt": -1})
+                if ok:
+                    det_crops.append(crop_rgb(img, (x1, y1, x2, y2)))
+            if gts and len(det):
+                gt_boxes = np.array([g["bbox"] for g in gts], dtype=float)
+                for gi, di in greedy_match(iou_matrix(gt_boxes, det), args.match_iou):
+                    d = rec["dets"][di]
+                    if d["crop_idx"] < 0:
+                        continue
+                    d["gt"] = gi
+                    rec["matches"].append({"gt_cls": gts[gi]["cls"], "ref_idx": len(m_gt_crops), "det": di})
+                    m_gt_crops.append(crop_rgb(img, gts[gi]["bbox"]))
+        images.append(rec)
 
-    gt_y, m_y = np.array(gt_y), np.array(m_y)
-    det_ok = np.array(m_det_cls) == m_y  # detector's own class on the same matches
-    det_own = int(det_ok.sum())
+    gt_y = np.array(gt_y)
     all_ref = int((classify(gt_crops) == gt_y).sum())
-    ref = int((classify(m_gt_crops) == m_y).sum())
-    cas_ok = classify(m_det_crops) == m_y
-    cas = int(cas_ok.sum())
-    n_m = len(m_y)
-    # Exact two-sided McNemar test, detector class vs BioCLIP on the same matched instances.
-    only_det, only_clip = int((det_ok & ~cas_ok).sum()), int((~det_ok & cas_ok).sum())
+    det_lab = classify(det_crops)
+    m_ref = classify(m_gt_crops)
+    for r in images:
+        for d in r["dets"]:
+            d["clip_cls"] = int(det_lab[d["crop_idx"]]) if d["crop_idx"] >= 0 else -1
+        for m in r["matches"]:
+            d = r["dets"][m["det"]]
+            m["ref_ok"] = int(m_ref[m["ref_idx"]] == m["gt_cls"])
+            m["cas_ok"] = int(d["clip_cls"] == m["gt_cls"])
+            m["det_ok"] = int(d["det_cls"] == m["gt_cls"])
+        r["n_gt"] = len(r["gt"])
+
+    # ---- instance-level summary (as in v1.3.0) ----
+    ms = [m for r in images for m in r["matches"]]
+    n_gt, n_m = int(sum(r["n_gt"] for r in images)), len(ms)
+    ref = sum(m["ref_ok"] for m in ms)
+    cas = sum(m["cas_ok"] for m in ms)
+    det_own = sum(m["det_ok"] for m in ms)
+    only_det = sum(m["det_ok"] and not m["cas_ok"] for m in ms)
+    only_clip = sum(m["cas_ok"] and not m["det_ok"] for m in ms)
     k, n_disc = min(only_det, only_clip), only_det + only_clip
-    p_mcnemar = min(1.0, 2 * sum(comb(n_disc, i) for i in range(k + 1)) / 2**n_disc) if n_disc else 1.0
+    p_mcnemar = min(1.0, 2 * sum(comb(n_disc, j) for j in range(k + 1)) / 2**n_disc) if n_disc else 1.0
+
+    # ---- image-clustered statistics ----
+    def ratio(rows, num, den):
+        a = sum(num(r) for r in rows)
+        b = sum(den(r) for r in rows)
+        return 100.0 * a / b if b else float("nan")
+
+    stats = {
+        "loc_recall": (lambda r: len(r["matches"]), lambda r: r["n_gt"]),
+        "reference": (lambda r: sum(m["ref_ok"] for m in r["matches"]), lambda r: len(r["matches"])),
+        "cascade": (lambda r: sum(m["cas_ok"] for m in r["matches"]), lambda r: len(r["matches"])),
+        "detector_class_acc": (lambda r: sum(m["det_ok"] for m in r["matches"]), lambda r: len(r["matches"])),
+        "e2e_bioclip": (lambda r: sum(m["cas_ok"] for m in r["matches"]), lambda r: r["n_gt"]),
+        "e2e_detector_only": (lambda r: sum(m["det_ok"] for m in r["matches"]), lambda r: r["n_gt"]),
+    }
+
+    def det_minus_clip(rows):
+        n = sum(len(r["matches"]) for r in rows)
+        return 100.0 * sum(m["det_ok"] - m["cas_ok"] for r in rows for m in r["matches"]) / n if n else float("nan")
+
+    rng = np.random.default_rng(args.seed)
+    n_img = len(images)
+    boots = [[images[j] for j in rng.integers(0, n_img, n_img)] for _ in range(args.bootstrap)]
+
+    def ci(fn):
+        v = np.array([fn(b) for b in boots], dtype=float)
+        v = v[np.isfinite(v)]
+        return [round(float(np.percentile(v, 2.5)), 2), round(float(np.percentile(v, 97.5)), 2)] if len(v) else None
+
+    clustered = {}
+    for key, (num, den) in stats.items():
+        clustered[key] = {"value": round(ratio(images, num, den), 2),
+                          "ci95_image_bootstrap": ci(lambda b, num=num, den=den: ratio(b, num, den))}
+    d_img = np.array([sum(m["det_ok"] - m["cas_ok"] for m in r["matches"]) for r in images], dtype=float)
+    nz = d_img[d_img != 0]
+    if len(nz):
+        flips = rng.choice([-1.0, 1.0], size=(20000, len(nz)))
+        p_sign = float((np.abs((flips * nz).sum(axis=1)) >= abs(nz.sum()) - 1e-9).mean())
+    else:
+        p_sign = 1.0
+    clustered["detector_minus_bioclip_pp"] = {"value": round(det_minus_clip(images), 2),
+                                              "ci95_image_bootstrap": ci(det_minus_clip),
+                                              "sign_flip_p_image_level": round(p_sign, 4),
+                                              "n_images_discordant": int(len(nz))}
+
+    modes = {}
+    for mode in ("detector", "bioclip"):
+        pt = species_prf(images, mode, k_cls)
+        modes[mode] = {key: (round(v, 2) if isinstance(v, float) else v) for key, v in pt.items() if not key.startswith("_")}
+        modes[mode]["per_class"] = {names[c]: {"precision": round(100 * float(pt["_p"][c]), 2),
+                                               "recall": round(100 * float(pt["_r"][c]), 2),
+                                               "f1": round(100 * float(pt["_f"][c]), 2),
+                                               "support": int(pt["_support"][c])} for c in range(k_cls)}
+        for key in ("macro_precision", "macro_recall", "macro_f1", "micro_f1"):
+            modes[mode][f"{key}_ci95"] = ci(lambda b, key=key, mode=mode: species_prf(b, mode, k_cls)[key])
+    diff = lambda b: species_prf(b, "detector", k_cls)["macro_f1"] - species_prf(b, "bioclip", k_cls)["macro_f1"]  # noqa: E731
+    modes["detector_minus_bioclip_macro_f1"] = {"value": round(diff(images), 2), "ci95": ci(diff)}
+
     out = {
         "detector": str(args.detector), "bioclip": str(args.bioclip), "conf": args.conf,
+        "qc_gate": str(args.qc_json) if args.qc_json else None,
+        "n_images": n_img, "n_images_gated": int(sum(r["gated"] for r in images)),
+        "n_gt_in_gated_images": int(sum(r["n_gt"] for r in images if r["gated"])),
+        "n_empty_images": int(sum(r["n_gt"] == 0 for r in images)),
         "n_gt": n_gt, "n_detections": n_det, "n_matched": n_m,
         "loc_recall": round(100 * n_m / n_gt, 2), "loc_recall_ci95": wilson(n_m, n_gt),
         "reference_all_gt": round(100 * all_ref / n_gt, 2),
@@ -161,9 +299,17 @@ def main() -> None:
         "detector_class_acc": round(100 * det_own / n_m, 2), "detector_class_acc_ci95": wilson(det_own, n_m),
         "only_detector_correct": only_det, "only_bioclip_correct": only_clip, "mcnemar_p": round(p_mcnemar, 4),
         "e2e": round(100 * cas / n_gt, 2), "e2e_ci95": wilson(cas, n_gt),
+        "image_clustered": clustered,
+        "species_level_all_predictions": modes,
     }
+    args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(out, indent=2), encoding="utf-8")
-    print(json.dumps(out))
+    print(json.dumps({key: out[key] for key in ("n_images", "n_images_gated", "n_gt_in_gated_images", "n_gt", "n_detections",
+                                                "n_matched", "loc_recall", "cascade", "detector_class_acc", "e2e", "mcnemar_p")}))
+    print(json.dumps(clustered))
+    print(json.dumps({m: {key: modes[m][key] for key in ("macro_precision", "macro_recall", "macro_f1", "macro_f1_ci95",
+                                                         "micro_f1", "tp", "fp", "fn")} for m in ("detector", "bioclip")}))
+    print(json.dumps(modes["detector_minus_bioclip_macro_f1"]))
 
 
 if __name__ == "__main__":
